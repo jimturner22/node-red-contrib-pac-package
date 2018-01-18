@@ -1,0 +1,129 @@
+/*
+   Copyright 2016 Opto 22
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+"use strict";
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var ApiLib = require("./api");
+var http = require('http');
+var https = require('https');
+var ControllerApi = ApiLib.AllApi;
+// The TypeScript client generated with swagger-codegen does not allow us to add our own
+// options to the Request library. However, there is an empty and useless default 
+// authentication field which we can override and use it as a general extension point.
+var RequestOptionsModifier = (function () {
+    function RequestOptionsModifier(publicCertFile, caCertFile, agent, https, isLocalhost) {
+        this.publicCertFile = publicCertFile;
+        this.caCertFile = caCertFile;
+        this.agent = agent;
+        this.https = https;
+        this.isLocalhost = isLocalhost;
+    }
+    RequestOptionsModifier.prototype.applyToRequest = function (requestOptions) {
+        if (this.https) {
+            // Add the required options. Wish there was a more official way to do this.
+            // An alternative is to customize the template used by the swagger-codegen tool.
+            // This is good enough for now.
+            if (this.publicCertFile) {
+                requestOptions.cert = this.publicCertFile;
+            }
+            if (this.caCertFile) {
+                requestOptions.ca = this.caCertFile;
+            }
+            // Local connections do not require certificates for HTTPS.
+            if (!this.publicCertFile && !this.caCertFile && this.isLocalhost) {
+                requestOptions.rejectUnauthorized = false;
+            }
+            requestOptions.port = 443;
+        }
+        else {
+            requestOptions.port = 80;
+        }
+        requestOptions.forever = true;
+        requestOptions.agent = this.agent;
+        requestOptions.timeout = 30000;
+    };
+    return RequestOptionsModifier;
+}());
+var ControllerApiEx = (function (_super) {
+    __extends(ControllerApiEx, _super);
+    function ControllerApiEx(username, password, basePath, address, https, publicCertFile, caCertFile) {
+        _super.call(this, username, password, basePath);
+        this.apiKeyId = username;
+        this.apiKeyValue = password;
+        this.https = https;
+        this.publicCertFile = publicCertFile;
+        this.caCertFile = caCertFile;
+        // Hack in the EPIC apiKey
+        if (username == 'apiKey') {
+            this.defaultHeaders['apiKey'] = password;
+        }
+        if (address.trim().toLowerCase() === 'localhost') {
+            this.isLocalHost = true;
+        }
+        this.replaceDefaultAuthWithCustomRequestOptions();
+    }
+    // The TypeScript client generated with swagger-codegen does not allow us to add our own
+    // options to the Request library. However, there is an empty and useless default 
+    // authentication field which we can override and use it as a general extension point.
+    ControllerApiEx.prototype.replaceDefaultAuthWithCustomRequestOptions = function () {
+        if (this.https) {
+            var httpsAgent = new https.Agent({
+                keepAlive: true,
+                maxSockets: 1 // might not be needed anymore, since we now use MessageQueue.
+            });
+            // Cast from the HTTPS to the HTTP agent. The node.d.ts typing file doesn't define
+            // https.Agent as being derived from http.Agent.
+            this.httpAgent = httpsAgent;
+            // Replace the default authentication handler.
+            this.authentications.default = new RequestOptionsModifier(this.publicCertFile, this.caCertFile, httpsAgent, this.https, this.isLocalHost);
+        }
+        else {
+            var httpAgent = new http.Agent({
+                keepAlive: true,
+                maxSockets: 1 // might not be needed anymore, since we now use MessageQueue.
+            });
+            this.httpAgent = httpAgent;
+            // Replace the default authentication handler.
+            this.authentications.default = new RequestOptionsModifier(null, null, httpAgent, this.https, this.isLocalHost);
+        }
+    };
+    ControllerApiEx.prototype.hasConfigError = function () {
+        if (this.configError === undefined) {
+            // Check for bad API keys
+            if (!(this.apiKeyId && this.apiKeyValue)) {
+                this.configError = true; // Bad API key ID or Value
+            }
+            else if (this.https === true) {
+                // Make sure we have at least a CA certificate file, which also covers self-signed certs.
+                if (!this.isLocalHost) {
+                    if (!this.caCertFile) {
+                        this.configError = true;
+                    }
+                }
+            }
+            else {
+                this.configError = false;
+            }
+        }
+        return this.configError;
+    };
+    return ControllerApiEx;
+}(ControllerApi));
+exports.ControllerApiEx = ControllerApiEx;
+//# sourceMappingURL=api-ex.js.map
