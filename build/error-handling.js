@@ -1,3 +1,4 @@
+"use strict";
 /*
    Copyright 2016 Opto 22
 
@@ -13,8 +14,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-"use strict";
-var ErrorDetails = (function () {
+Object.defineProperty(exports, "__esModule", { value: true });
+var ErrorDetails = /** @class */ (function () {
     function ErrorDetails(nodeShortErrorMsg, logLongErrorMsg) {
         this.nodeShortErrorMsg = nodeShortErrorMsg;
         this.logLongErrorMsg = logLongErrorMsg;
@@ -25,7 +26,7 @@ exports.ErrorDetails = ErrorDetails;
 /**
  * Handler for HTTP response errors.
  */
-var ResponseErrorMessages = (function () {
+var ResponseErrorMessages = /** @class */ (function () {
     function ResponseErrorMessages() {
     }
     /**
@@ -77,7 +78,7 @@ var ResponseErrorMessages = (function () {
 /**
  * Handler for errors coming from the PAC.
  */
-var PacErrorMessages = (function () {
+var PacErrorMessages = /** @class */ (function () {
     function PacErrorMessages() {
     }
     PacErrorMessages.getPacErrorMsg = function (error) {
@@ -107,7 +108,7 @@ var PacErrorMessages = (function () {
 /**
  * Handler for HTTP Status codes.
  */
-var StatusCodeMessages = (function () {
+var StatusCodeMessages = /** @class */ (function () {
     function StatusCodeMessages() {
     }
     StatusCodeMessages.getErrorMsg = function (statusCode) {

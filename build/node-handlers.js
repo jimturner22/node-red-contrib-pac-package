@@ -1,3 +1,4 @@
+"use strict";
 /*
    Copyright 2016 Opto 22
 
@@ -13,12 +14,17 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-"use strict";
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
 var ErrorHanding = require("./error-handling");
 var ConfigHandler = require("./config-handler");
 var RED;
@@ -29,7 +35,7 @@ exports.setRED = setRED;
 /**
  * Base class for SNAP PAC nodes.
  */
-var PacNodeBaseImpl = (function () {
+var PacNodeBaseImpl = /** @class */ (function () {
     function PacNodeBaseImpl(nodeConfig, deviceConfig, node) {
         this.nodeConfig = nodeConfig;
         this.deviceConfig = deviceConfig;
@@ -45,6 +51,7 @@ var PacNodeBaseImpl = (function () {
     }
     /** Add message to the queue. */
     PacNodeBaseImpl.prototype.addMsg = function (msg) {
+        var _this = this;
         // Check that we have a controller connection to use.
         if (!this.ctrl || !this.ctrlQueue) {
             // If there's no controller connection, immediately return and effectively
@@ -59,20 +66,23 @@ var PacNodeBaseImpl = (function () {
             this.node.status({ fill: "red", shape: "dot", text: 'Configuration error' });
             return;
         }
-        // Add the message to the queue.
-        var queueLength = this.ctrlQueue.add(msg, this.node, this, this.onInput);
-        // See if there's room for the message.
-        if (queueLength < 0) {
-            this.node.warn('Message rejected. Queue is full for controller.');
-        }
-        // Update the node's status, but don't overwrite the status if this node is currently
-        // being processed.
-        var currentMsgBeingProcessed = this.ctrlQueue.getCurrentMessage();
-        if (currentMsgBeingProcessed.inputEventObject !== this) {
-            if (queueLength !== 0) {
-                this.updateQueuedStatus(queueLength);
+        // Need to know if it's a SNAP or Groov PAC
+        this.ctrl.getServerType(function () {
+            // Add the message to the queue.
+            var queueLength = _this.ctrlQueue.add(msg, _this.node, _this, _this.onInput);
+            // See if there's room for the message.
+            if (queueLength < 0) {
+                _this.node.warn('Message rejected. Queue is full for controller.');
             }
-        }
+            // Update the node's status, but don't overwrite the status if this node is currently
+            // being processed.
+            var currentMsgBeingProcessed = _this.ctrlQueue.getCurrentMessage();
+            if (currentMsgBeingProcessed.inputEventObject !== _this) {
+                if (queueLength !== 0) {
+                    _this.updateQueuedStatus(queueLength);
+                }
+            }
+        });
     };
     PacNodeBaseImpl.prototype.updateQueuedStatus = function (queueLength) {
         if (queueLength >= 1) {
@@ -105,11 +115,12 @@ exports.PacNodeBaseImpl = PacNodeBaseImpl;
 /**
  * The implementation class for the SNAP PAC Read nodes.
  */
-var PacReadNodeImpl = (function (_super) {
+var PacReadNodeImpl = /** @class */ (function (_super) {
     __extends(PacReadNodeImpl, _super);
     function PacReadNodeImpl(nodeConfig, deviceConfig, node) {
-        _super.call(this, nodeConfig, deviceConfig, node);
-        this.nodeReadConfig = nodeConfig;
+        var _this = _super.call(this, nodeConfig, deviceConfig, node) || this;
+        _this.nodeReadConfig = nodeConfig;
+        return _this;
     }
     // Handler for 'close' events from Node-RED.
     PacReadNodeImpl.prototype.onClose = function () {
@@ -292,11 +303,12 @@ exports.PacReadNodeImpl = PacReadNodeImpl;
 /**
  * The implementation class for the SNAP PAC Write nodes.
  */
-var PacWriteNodeImpl = (function (_super) {
+var PacWriteNodeImpl = /** @class */ (function (_super) {
     __extends(PacWriteNodeImpl, _super);
     function PacWriteNodeImpl(nodeConfig, deviceConfig, node) {
-        _super.call(this, nodeConfig, deviceConfig, node);
-        this.nodeWriteConfig = nodeConfig;
+        var _this = _super.call(this, nodeConfig, deviceConfig, node) || this;
+        _this.nodeWriteConfig = nodeConfig;
+        return _this;
     }
     // Handler for 'close' events from Node-RED.
     PacWriteNodeImpl.prototype.onClose = function () {

@@ -1,3 +1,4 @@
+"use strict";
 /*
    Copyright 2016 Opto 22
 
@@ -13,10 +14,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var NodeHandlers = require("./node-handlers");
 var ConfigHandler = require("./config-handler");
-var semver = require('semver');
+var semver = require("semver");
 var module;
 function checkVersion(RED) {
     var minNodeJsRequired = 'v4.4.5';

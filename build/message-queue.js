@@ -1,3 +1,4 @@
+"use strict";
 /*
    Copyright 2016 Opto 22
 
@@ -13,14 +14,14 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * Class for throttling messages associated with an external resource.
  * The owner of the queue can manage the relationship between its resource and the queue.
  * The SNAP PAC nodes need it so that we can control certain error conditions, and also not overwhelm a
  * slower controller when using HTTPS.
  */
-var MessageQueue = (function () {
+var MessageQueue = /** @class */ (function () {
     function MessageQueue(maxLength) {
         // The queue, as an array.
         this.queue = [];
@@ -90,6 +91,5 @@ var MessageQueue = (function () {
     };
     return MessageQueue;
 }());
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = MessageQueue;
 //# sourceMappingURL=message-queue.js.map

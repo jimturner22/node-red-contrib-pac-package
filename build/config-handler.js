@@ -1,3 +1,4 @@
+"use strict";
 /*
    Copyright 2016 Opto 22
 
@@ -13,11 +14,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var ApiExLib = require("./api-ex");
 var message_queue_1 = require("./message-queue");
-var fs = require('fs');
-var path = require('path');
+var fs = require("fs");
+var path = require("path");
 var RED;
 function setRED(globalRED) {
     RED = globalRED;
@@ -67,7 +68,7 @@ function createSnapPacDeviceNode(config) {
             }
         }
     }
-    var ctrl = exports.controllerConnections.createControllerConnection(address, useHttps, key, secret, publicCertFile, caCertFile, config.id);
+    var ctrl = exports.controllerConnections.createControllerConnection(address, useHttps, key, secret, publicCertFile, caCertFile, config.id, false);
     this.on('close', function () {
         ctrl.queue.dump(); // dump all but the current in-progress message for this connection.
     });
@@ -84,23 +85,22 @@ function getCertFile(certPath) {
     }
 }
 // Holder for controller connections and message queues.
-var ControllerConnection = (function () {
+var ControllerConnection = /** @class */ (function () {
     function ControllerConnection(ctrl, queue) {
         this.ctrl = ctrl;
         this.queue = queue;
     }
     return ControllerConnection;
 }());
-var ControllerConnections = (function () {
+var ControllerConnections = /** @class */ (function () {
     function ControllerConnections() {
         this.controllerCache = [];
     }
-    ControllerConnections.prototype.createControllerConnection = function (address, useHttps, key, secret, publicCertFile, caCertFile, id) {
+    ControllerConnections.prototype.createControllerConnection = function (address, useHttps, key, secret, publicCertFile, caCertFile, id, testing) {
         var scheme = useHttps ? 'https' : 'http';
-        var snapPac = false; // Default to EPIC for this branch
-        var fullAddress = scheme + '://' + address + (snapPac ? '/api/v1' : '/pac');
+        var fullAddress = scheme + '://' + address;
         // Create the connection to the controller.
-        var ctrl = new ApiExLib.ControllerApiEx(key, secret, fullAddress, address, useHttps, publicCertFile, caCertFile);
+        var ctrl = new ApiExLib.ControllerApiEx(key, secret, fullAddress, address, useHttps, publicCertFile, caCertFile, testing);
         // Cache it, using the Configuration node's id property.
         this.controllerCache[id] = new ControllerConnection(ctrl, new message_queue_1.default(500));
         return this.controllerCache[id];
