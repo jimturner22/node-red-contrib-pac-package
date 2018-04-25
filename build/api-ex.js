@@ -130,65 +130,89 @@ var ControllerApiEx = /** @class */ (function (_super) {
         this.defaultHeaders['apiKey'] = this.apiKeyValue;
     };
     /**
-     * Determines the type of PAC we're communicating with.
-     * First tries the SNAP PAC method, and then Groov EPIC PAC method.
+     * Determines the type of control engine we're communicating with.
+     * First tries the SNAP PAC method, and then Groov EPIC method.
      * Both might fail, since the device may be unreachable.
      * Once determined, the type is cached.
      */
-    ControllerApiEx.prototype.getServerType = function (callback) {
+    ControllerApiEx.prototype.getDeviceType = function (node, callback) {
         var _this = this;
         if (this.hasDeterminedSystemType) {
             process.nextTick(callback);
         }
         else {
+            if (node) {
+                node.status({ fill: "green", shape: "ring", text: 'determining device type' });
+            }
+            // console.log('getDeviceType: Determining server type');
             this.readDeviceDetails()
                 .then(function (fullfilledResponse) {
                 if (fullfilledResponse.body && fullfilledResponse.body.controllerType) {
                     _this.isTargetSnap = true;
                     _this.hasDeterminedSystemType = true;
+                    // console.log('getDeviceType: Determined server type is SNAP');
                     callback();
                 }
                 else {
                     // Try the Groov EPIC path
                     _this.setToGroov();
+                    // console.log('getDeviceType: Trying Groov style of server 1');
                     // See if Groov EPIC works
                     _this.readDeviceDetails()
                         .then(function (fullfilledResponse) {
+                        // console.log('getDeviceType: Got a response (1). ' + fullfilledResponse.response.statusCode);
                         if (fullfilledResponse.body && fullfilledResponse.body.controllerType) {
                             _this.isTargetEpic = true;
                             _this.hasDeterminedSystemType = true;
+                            // console.log('getDeviceType: Determined server type is Groov 1');
                             callback();
                         }
                         else {
                             _this.setToSnap(); // Reset to default
+                            // console.log('getDeviceType: Resetting to SNAP 1');
                             callback(); // error ?
                         }
                     })
                         .catch(function (error) {
                         _this.setToSnap(); // Reset to default
+                        // console.log('getDeviceType: Caught an error (1). ' + error.message);
+                        // console.log('getDeviceType: Resetting to SNAP 2.');
                         // Neither worked.
                         callback(error);
                     });
                 }
             })
                 .catch(function (error) {
+                // console.log('getDeviceType: Caught an error (2). ' + error.message);
+                // For certain errors, don't even continue.
+                if (error && (error.code == 'ETIMEDOUT' || error.code == 'ENETUNREACH')) {
+                    // console.log('getDeviceType: done trying after error.');
+                    // We're done. No reason to try again.
+                    callback(error);
+                    return;
+                }
                 // Try the EPIC path
                 _this.setToGroov();
+                // console.log('getDeviceType: Trying Groov style of server 2');
                 // See if Groov EPIC works
                 _this.readDeviceDetails()
                     .then(function (fullfilledResponse) {
+                    // console.log('getDeviceType: Got a response (2). ' + fullfilledResponse.response.statusCode);
                     if (fullfilledResponse.body && fullfilledResponse.body.controllerType) {
                         _this.isTargetEpic = true;
                         _this.hasDeterminedSystemType = true;
+                        // console.log('getDeviceType: Determined server type is Groov 2');
                         callback();
                     }
                     else {
                         // Reset to SNAP
                         _this.setToSnap();
+                        // console.log('getDeviceType: Resetting to SNAP 3.');
                         callback(); // error ?
                     }
                 })
                     .catch(function (error) {
+                    // console.log('getDeviceType: Caught an error (3). ' + error.message);
                     _this.setToSnap(); // Reset to SNAP
                     // Neither worked.
                     callback(error);
@@ -199,7 +223,7 @@ var ControllerApiEx = /** @class */ (function (_super) {
     ControllerApiEx.prototype.hasConfigError = function () {
         if (this.configError === undefined) {
             // Check for bad API keys
-            if (!(this.apiKeyId && this.apiKeyValue)) {
+            if (!this.apiKeyValue) {
                 this.configError = true; // Bad API key ID or Value
             }
             else if (this.https === true) {

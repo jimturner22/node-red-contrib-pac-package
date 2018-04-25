@@ -67,7 +67,11 @@ var PacNodeBaseImpl = /** @class */ (function () {
             return;
         }
         // Need to know if it's a SNAP or Groov PAC
-        this.ctrl.getServerType(function () {
+        this.ctrl.getDeviceType(this.node, function (error) {
+            if (error) {
+                ErrorHanding.handleErrorResponse(error, msg, _this.node);
+                return;
+            }
             // Add the message to the queue.
             var queueLength = _this.ctrlQueue.add(msg, _this.node, _this, _this.onInput);
             // See if there's room for the message.

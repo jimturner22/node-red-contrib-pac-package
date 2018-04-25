@@ -66,7 +66,8 @@ var ResponseErrorMessages = /** @class */ (function () {
         // Socket errors
         'ECONNREFUSED': 'Connection refused',
         'ETIMEDOUT': 'Timeout',
-        'EHOSTUNREACH': 'PAC unreachable',
+        'EHOSTUNREACH': 'Device unreachable',
+        'ENETUNREACH': 'Network unreachable',
         'ENOTFOUND': 'Address not found',
         'EINVAL': 'Invalid argument',
         'EAI_AGAIN': 'Address not found',

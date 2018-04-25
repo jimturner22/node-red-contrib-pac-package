@@ -45,7 +45,7 @@ function createSnapPacDeviceNode(config) {
     caCertPath = caCertPath ? caCertPath.trim() : '';
     var publicCertFile;
     var caCertFile;
-    if (key === '' || secret === '') {
+    if (secret === '') {
         RED.log.error('Missing API key for ' + address);
     }
     if (useHttps && !isLocalhost) {
