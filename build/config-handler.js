@@ -17,8 +17,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var ApiExLib = require("./api-ex");
 var message_queue_1 = require("./message-queue");
-var fs = require("fs");
-var path = require("path");
+var CertificateUtil = require("opto22-node-red-common/lib/CertificateUtil");
 var RED;
 function setRED(globalRED) {
     RED = globalRED;
@@ -53,8 +52,8 @@ function createSnapPacDeviceNode(config) {
             RED.log.error('Missing SSL CA certificate for ' + address);
         }
         try {
-            publicCertFile = getCertFile(publicCertPath);
-            caCertFile = getCertFile(caCertPath);
+            publicCertFile = CertificateUtil.getCertFile(RED, publicCertPath);
+            caCertFile = CertificateUtil.getCertFile(RED, caCertPath);
         }
         catch (err) {
             if (err.code === 'ENOENT') {
@@ -74,16 +73,6 @@ function createSnapPacDeviceNode(config) {
     });
 }
 exports.createSnapPacDeviceNode = createSnapPacDeviceNode;
-function getCertFile(certPath) {
-    if (certPath && certPath.length > 0) {
-        // See if we have an absolute or relative path
-        if (!path.isAbsolute(certPath)) {
-            // For relative paths, start from Node-RED's userDir + "/certs".
-            certPath = path.join(RED.settings.userDir, 'certs', certPath);
-        }
-        return fs.readFileSync(certPath);
-    }
-}
 // Holder for controller connections and message queues.
 var ControllerConnection = /** @class */ (function () {
     function ControllerConnection(ctrl, queue) {
